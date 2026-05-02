@@ -121,9 +121,9 @@ See [`bob_sessions/`](bob_sessions/) for:
 
 ## 👤 Author
 
-**Duong Nguyen** — duonganhdn2000@gmail.com
+**Dương Nguyễn Anh** — duonganhdn2000@gmail.com
 
-Team: `ibm-coding-challenge-uat` | Plan: Enterprise
+Team: `DuongAnh` | Plan: Enterprise
 
 ---
 
