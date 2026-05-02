@@ -1,1 +1,1 @@
-Bob helps me ensure all the output is in English
+Bob usually helps me ensure all the output is in English

@@ -1,0 +1,1 @@
+Viết test cho message router và RPA controller. Test message router cần mock AI client và Telegram adapter, test flow từ nhận message đến gửi reply. Test RPA controller cần mock pyautogui. Lưu trong tests/test_message_router_bob.py và tests/test_rpa_controller.py.

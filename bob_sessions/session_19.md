@@ -1,0 +1,1 @@
+/bob Write a Python script that fetches the current weather for Tokyo using the wttr.in API and prints it to the console, then run the code.

@@ -1,1 +1,1 @@
-Lỗi "IBM Watsonx AI SDK not available. Install with: pip install ibm-watsonx-ai" khi tắt mock mode và bot Telegram cố gọi AI thật. Cài thư viện rồi restart server giúp tôi.
+Tôi gặp lỗi "IBM Watsonx AI SDK not available. Install with: pip install ibm-watsonx-ai" khi tắt mock mode và bot Telegram cố gọi AI thật. Cài thư viện rồi restart server giúp tôi.
