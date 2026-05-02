@@ -56,7 +56,10 @@ logs/
 htmlcov/
 .tox/
 
-# Bob sessions
-bob_sessions/
+# Bob sessions should NOT be ignored as per hackathon guide
+# bob_sessions/
+
+# PDFs
+*.pdf
 
 # Made with Bob

@@ -1,7 +1,24 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.router import api_router
+from app.models.conversation import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI application.
+    
+    Handles startup and shutdown events.
+    """
+    # Startup: Initialize database
+    await init_db()
+    yield
+    # Shutdown: cleanup if needed
+    pass
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -9,7 +26,8 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="API Gateway for Social Media Integration",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configure CORS
@@ -44,7 +62,8 @@ async def health_check():
     return {
         "status": "healthy",
         "service": settings.APP_NAME,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        "mock_mode": settings.USE_MOCK_AI
     }
 
 

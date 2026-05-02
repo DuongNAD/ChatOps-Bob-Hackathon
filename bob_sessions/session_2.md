@@ -1,0 +1,1 @@
+Hãy đóng vai trò là một Senior QA Engineer. Viết Unit Test bằng thư viện pytest cho endpoint này và hướng dẫn tôi lưu vào thư mục tests

@@ -23,6 +23,25 @@ class Settings(BaseSettings):
         "http://localhost:8000"
     ]
     
+    # IBM Watsonx AI
+    WATSONX_API_URL: str = "https://us-south.ml.cloud.ibm.com"
+    WATSONX_PROJECT_ID: str = ""
+    IBM_CLOUD_API_KEY: str = ""
+    WATSONX_MODEL: str = "ibm/granite-8b-code-instruct"
+    
+    # Telegram Bot
+    TELEGRAM_BOT_TOKEN: str = ""
+    
+    # Database
+    DATABASE_URL: str = "sqlite:///./data/chatops.db"
+    
+    # AI Configuration
+    USE_MOCK_AI: bool = True
+    FORCE_ENGLISH_OUTPUT: bool = True  # Force all AI responses to be in English
+    
+    # Liva Gateway
+    LIVA_GATEWAY_URL: str = "http://localhost:8082"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

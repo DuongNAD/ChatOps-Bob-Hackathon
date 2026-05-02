@@ -1,0 +1,17 @@
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+ibm-watsonx-ai>=1.1.0
+aiosqlite>=0.20.0
+httpx>=0.27,<0.29
+mcp>=1.0.0
+python-dotenv==1.0.0
+pyTelegramBotAPI>=4.14.0
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pyautogui
+pillowopencv-python
+pyperclip
+pygetwindow
