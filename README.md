@@ -1,235 +1,130 @@
-# Social Media API Gateway
+# ChatOps-Bob Gateway
 
-API Gateway backend application built with FastAPI for social media integration.
+> **IBM Bob Dev Day Hackathon** — A ChatOps microservice that bridges Telegram with IBM Bob AI via RPA automation.
 
-## 📋 Features
+## 🎯 What It Does
 
-- ✅ FastAPI framework with async support
-- ✅ RESTful API design
-- ✅ CORS middleware configured
-- ✅ Pydantic data validation
-- ✅ Auto-generated API documentation (Swagger UI & ReDoc)
-- ✅ Environment-based configuration
-- ✅ Structured project layout
+Send a `/bob` command from Telegram → the gateway automates VS Code's Bob IDE via RPA (pyautogui) → Bob executes the task → screenshot + code result sent back to Telegram.
 
-## 🏗️ Project Structure
+```
+Telegram  →  FastAPI Webhook  →  RPA Controller  →  Bob IDE (VS Code)
+   ↑                                                       ↓
+   └──────────────  Screenshot + Code Result  ←────────────┘
+```
+
+## 🏗️ Architecture
+
+| Layer | Technology |
+|-------|-----------|
+| **API Framework** | FastAPI (async) |
+| **AI Engine** | IBM Watsonx `ibm/granite-3-8b-instruct` |
+| **Chat Platform** | Telegram Bot (webhook) |
+| **RPA Automation** | pyautogui + pygetwindow + Pillow |
+| **Database** | SQLite (async via aiosqlite) |
+| **MCP Server** | `chatops-gateway` for conversation queries |
+
+## 📁 Project Structure
 
 ```
 IBM_Hackathon/
 ├── app/
-│   ├── api/
-│   │   └── v1/
-│   │       ├── endpoints/
-│   │       │   ├── __init__.py
-│   │       │   └── scan.py          # Scan endpoint
-│   │       ├── __init__.py
-│   │       └── router.py            # API v1 router
-│   ├── core/
-│   │   ├── __init__.py
-│   │   └── config.py                # Application settings
-│   ├── models/
-│   │   └── __init__.py
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   └── scan.py                  # Request/Response schemas
+│   ├── api/v1/endpoints/
+│   │   ├── scan.py              # Legacy scan endpoint
+│   │   └── webhook.py           # Telegram webhook handler
+│   ├── core/config.py           # Pydantic settings
+│   ├── models/conversation.py   # SQLite async database layer
+│   ├── schemas/message.py       # Pydantic V2 schemas
 │   ├── services/
-│   │   └── __init__.py
-│   └── __init__.py
+│   │   ├── channel_adapters/
+│   │   │   └── telegram.py      # Telegram Bot adapter
+│   │   ├── ibm_ai_client.py     # IBM Watsonx AI client
+│   │   ├── message_router.py    # Message routing + /bob handler
+│   │   └── rpa_controller.py    # Bob IDE RPA automation
+│   └── mcp/server.py            # MCP server for conversations
+├── bob_sessions/                # Bob IDE task histories + screenshots
+├── data/
+│   ├── chatops.db               # SQLite database (auto-created)
+│   └── screenshots/             # RPA-captured screenshots
 ├── tests/
-├── .env.example                      # Environment variables example
-├── main.py                           # Application entry point
-├── requirements.txt                  # Python dependencies
-└── README.md
+├── AGENTS.md                    # AI coding rules
+├── main.py                      # App entry point
+└── requirements.txt
 ```
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
+- Python 3.13+
+- IBM Bob IDE extension in VS Code
+- Telegram Bot token
+- IBM Cloud API key (for Watsonx AI)
+- ngrok (for Telegram webhook tunneling)
 
-- Python 3.8 or higher
-- pip (Python package manager)
+### Setup
 
-### Installation
-
-1. **Clone the repository** (if applicable)
-   ```bash
-   cd e:/project/IBM_Hackathon
-   ```
-
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   ```
-
-3. **Activate the virtual environment**
-   
-   On Windows (PowerShell):
-   ```powershell
-   .\venv\Scripts\Activate.ps1
-   ```
-   
-   On Windows (Command Prompt):
-   ```cmd
-   venv\Scripts\activate.bat
-   ```
-   
-   On Linux/Mac:
-   ```bash
-   source venv/bin/activate
-   ```
-
-4. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Create environment file**
-   ```bash
-   copy .env.example .env
-   ```
-   
-   Edit `.env` file if needed to customize settings.
-
-### Running the Application
-
-**Development mode with auto-reload:**
 ```bash
-python main.py
+# 1. Clone & enter project
+git clone https://github.com/DuongNAD/ChatOps-Bob-Hackathon.git
+cd ChatOps-Bob-Hackathon
+
+# 2. Create virtual environment
+python -m venv venv
+.\venv\Scripts\Activate.ps1        # Windows PowerShell
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment
+copy .env.example .env
+# Edit .env with your real API keys
+
+# 5. Start the server
+.\venv\Scripts\python.exe -m uvicorn main:app --reload
+
+# 6. Expose via ngrok (new terminal)
+ngrok http 8000
+
+# 7. Set Telegram webhook
+# POST https://api.telegram.org/bot<TOKEN>/setWebhook?url=<NGROK_URL>/api/v1/webhook/telegram
 ```
 
-**Or using uvicorn directly:**
+### Usage
+
+In Telegram, send to your bot:
+- **Chat with AI**: Just type any message → IBM Granite AI responds
+- **Run Bob IDE task**: `/bob Write a Python function to calculate Fibonacci series`
+- **Get weather**: `/bob Write a Python script that fetches Tokyo weather`
+
+## 🔑 Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `IBM_CLOUD_API_KEY` | IBM Cloud API key for Watsonx |
+| `WATSONX_PROJECT_ID` | Watsonx project ID |
+| `TELEGRAM_BOT_TOKEN` | Telegram Bot API token |
+| `USE_MOCK_AI` | `True` for mock responses, `False` for real AI |
+| `FORCE_ENGLISH_OUTPUT` | Force AI to respond in English |
+
+## 🧪 Testing
+
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+pytest                              # Run all tests
+pytest --cov=app --cov-report=html  # With coverage
 ```
 
-The application will start at: `http://localhost:8000`
+## 📸 Bob Sessions & Evidence
 
-## 📚 API Documentation
+See [`bob_sessions/`](bob_sessions/) for:
+- **20 task sessions** documenting the full development flow
+- **23 screenshots** from Bob IDE showing real task execution
+- **Bobcoin consumption**: 27.15 / 40.00 used (68%)
 
-Once the application is running, you can access:
+## 👤 Author
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+**Duong Nguyen** — duonganhdn2000@gmail.com
 
-## 🔌 API Endpoints
-
-### Root Endpoint
-- **GET** `/` - Health check and service information
-
-### Health Check
-- **GET** `/health` - Service health status
-
-### Scan Endpoint
-- **POST** `/api/v1/scan` - Initialize scanning sequence
-
-#### Request Body Example:
-```json
-{
-  "url": "https://facebook.com/example",
-  "platform": "facebook",
-  "data": {
-    "user_id": "123456"
-  }
-}
-```
-
-#### Response Example:
-```json
-{
-  "message": "Scanning sequence initialized...",
-  "status": "success"
-}
-```
-
-## 🧪 Testing the API
-
-### Using cURL:
-```bash
-curl -X POST "http://localhost:8000/api/v1/scan" \
-  -H "Content-Type: application/json" \
-  -d "{\"url\":\"https://facebook.com/example\",\"platform\":\"facebook\"}"
-```
-
-### Using PowerShell:
-```powershell
-$body = @{
-    url = "https://facebook.com/example"
-    platform = "facebook"
-    data = @{
-        user_id = "123456"
-    }
-} | ConvertTo-Json
-
-Invoke-RestMethod -Uri "http://localhost:8000/api/v1/scan" -Method Post -Body $body -ContentType "application/json"
-```
-
-### Using Python requests:
-```python
-import requests
-
-response = requests.post(
-    "http://localhost:8000/api/v1/scan",
-    json={
-        "url": "https://facebook.com/example",
-        "platform": "facebook",
-        "data": {"user_id": "123456"}
-    }
-)
-print(response.json())
-```
-
-## ⚙️ Configuration
-
-Configuration is managed through environment variables. See `.env.example` for available options:
-
-- `APP_NAME`: Application name
-- `APP_VERSION`: Application version
-- `DEBUG`: Enable/disable debug mode
-- `HOST`: Server host (default: 0.0.0.0)
-- `PORT`: Server port (default: 8000)
-- `API_V1_PREFIX`: API v1 prefix (default: /api/v1)
-- `ALLOWED_ORIGINS`: CORS allowed origins
-
-## 📦 Dependencies
-
-- **fastapi**: Modern web framework for building APIs
-- **uvicorn**: ASGI server for running FastAPI
-- **pydantic**: Data validation using Python type annotations
-- **pydantic-settings**: Settings management
-- **python-dotenv**: Environment variable management
-- **httpx**: HTTP client for async requests
-- **python-multipart**: Form data parsing
-
-## 🔧 Development
-
-### Adding New Endpoints
-
-1. Create a new file in `app/api/v1/endpoints/`
-2. Define your router and endpoints
-3. Add schemas in `app/schemas/`
-4. Include the router in `app/api/v1/router.py`
-
-### Project Conventions
-
-- Use async/await for all endpoints
-- Define Pydantic schemas for request/response validation
-- Follow REST API best practices
-- Add proper documentation to endpoints
-
-## 📝 License
-
-This project is part of IBM Hackathon.
-
-## 👥 Author
-
-Senior Backend Developer
+Team: `ibm-coding-challenge-uat` | Plan: Enterprise
 
 ---
 
-**Note**: This is a basic setup. For production deployment, consider adding:
-- Database integration
-- Authentication & Authorization
-- Rate limiting
-- Logging & Monitoring
-- Error handling middleware
-- Unit & Integration tests
+*Built with IBM Bob IDE for the IBM Bob Dev Day Hackathon*
