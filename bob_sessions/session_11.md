@@ -1,1 +1,1 @@
-Viết test cho message router và RPA controller. Test message router cần mock AI client và Telegram adapter, test flow từ nhận message đến gửi reply. Test RPA controller cần mock pyautogui. Lưu trong tests/test_message_router_bob.py và tests/test_rpa_controller.py.
+RPA bấm nhầm nút. Nó detect pixel xanh ở viền border 1px rồi click vào đó thay vì nút Run thật. Thêm bước verify: check pixel 10px bên dưới, nếu cũng xanh thì mới là nút solid, không phải viền mỏng.

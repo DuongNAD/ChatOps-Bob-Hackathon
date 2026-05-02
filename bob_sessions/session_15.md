@@ -1,1 +1,1 @@
-RPA bấm nhầm nút. Nó detect pixel xanh ở viền border 1px rồi click vào đó thay vì nút Run thật. Thêm bước verify: check pixel 10px bên dưới, nếu cũng xanh thì mới là nút solid, không phải viền mỏng.
+Tạo MCP server trong app/mcp/server.py. Dùng mcp Python SDK, server tên "chatops-gateway", expose tool fetch_recent_conversations để query 5 tin nhắn gần nhất từ database data/chatops.db. Chạy qua stdio transport.

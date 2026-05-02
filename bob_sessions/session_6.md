@@ -1,1 +1,1 @@
-Bob helps me ensure all the output is in English
+Tạo message router trong app/services/message_router.py. Function process_incoming_message nhận UnifiedMessage, lưu tin nhắn user vào DB, lấy history 5 tin gần nhất, gọi AI generate response, lưu response vào DB, gửi reply qua Telegram.

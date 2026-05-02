@@ -1,1 +1,1 @@
-Tạo MCP server trong app/mcp/server.py. Dùng mcp Python SDK, server tên "chatops-gateway", expose tool fetch_recent_conversations để query 5 tin nhắn gần nhất từ database data/chatops.db. Chạy qua stdio transport.
+Bob helps me ensure all the output is in English

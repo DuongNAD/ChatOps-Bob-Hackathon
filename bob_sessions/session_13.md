@@ -1,1 +1,1 @@
-Lỗi "IBM Watsonx AI SDK not available. Install with: pip install ibm-watsonx-ai" khi bot Telegram cố gọi AI thật. Cài thư viện rồi restart server giúp tôi.
+Update message router để xử lý lệnh /bob. Khi user gửi "/bob <command>" thì route tới RPAController thay vì AI pipeline. Gửi screenshot + code text về Telegram. Handle trạng thái busy nếu đang xử lý lệnh khác.

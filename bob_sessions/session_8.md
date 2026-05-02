@@ -1,1 +1,1 @@
-Tạo RPA controller trong app/services/rpa_controller.py. Dùng pyautogui để tự động gõ lệnh vào Bob IDE chat panel. Cần focus cửa sổ VS Code, paste command qua clipboard, bấm Enter, chờ Bob xử lý, tự động click nút Run (scan pixel màu xanh), chụp screenshot kết quả lưu vào data/screenshots. Phải có async lock chống chạy đồng thời.
+Lỗi "IBM Watsonx AI SDK not available. Install with: pip install ibm-watsonx-ai" khi tắt mock mode và bot Telegram cố gọi AI thật. Cài thư viện rồi restart server giúp tôi.

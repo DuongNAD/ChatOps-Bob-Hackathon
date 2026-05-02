@@ -1,1 +1,1 @@
-Generate OpenAPI spec từ FastAPI app và export ra file openapi.json. Tạo script export_openapi.py.
+Nút Run và nút Start New Task đều màu xanh RGB(0,120,212). Sửa logic RPA để phân biệt: check pixel 150px bên phải, nếu vẫn xanh thì đó là Start New Task (rộng toàn panel), không phải Run. Thêm stability window 10 giây đầu không detect Start New Task để tránh false positive.
