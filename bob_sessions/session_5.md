@@ -1,5 +1,1 @@
-Tôi gặp lỗi "IBM Watsonx AI SDK not available. Install with: pip install ibm-watsonx-ai" khi bot Telegram cố gọi AI thật.
-Hãy chạy lệnh sau trong terminal để cài thư viện IBM Watsonx AI:
-.\venv\Scripts\pip.exe install ibm-watsonx-ai --default-timeout=1000
-Sau khi cài xong, tắt server (Ctrl+C) rồi khởi động lại:
-.\venv\Scripts\python.exe -m uvicorn main:app --reload
+Tạo IBMAIClient trong app/services/ibm_ai_client.py. Cần có mock mode (khi USE_MOCK_AI=True trả mock response) và real mode dùng ibm-watsonx-ai SDK với ModelInference. Model ibm/granite-3-8b-instruct, greedy decoding, max 1024 tokens. Handle ImportError khi SDK chưa cài.
