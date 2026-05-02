@@ -1,0 +1,1 @@
+Database lỗi "no such table: messages" khi nhận tin nhắn đầu tiên. init_db() chưa được gọi vì tôi quên thêm vào lifespan handler trong main.py. Sửa lifespan để gọi await init_db() khi startup.

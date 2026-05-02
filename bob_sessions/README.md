@@ -18,3 +18,7 @@ This directory contains exported Bob IDE task session histories for the ChatOps-
 | session_10 | RPA button detection refinement |
 | session_11 | Tests for message router and RPA controller |
 | session_12 | OpenAPI spec export |
+| session_13 | 🐛 Fix: IBM Watsonx SDK not installed error |
+| session_14 | 🐛 Fix: Telegram markdown parse error on AI response |
+| session_15 | 🐛 Fix: RPA clicking border pixel instead of Run button |
+| session_16 | 🐛 Fix: Database table not created on first startup |

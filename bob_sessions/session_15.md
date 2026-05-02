@@ -1,0 +1,1 @@
+RPA bấm nhầm nút. Nó detect pixel xanh ở viền border 1px rồi click vào đó thay vì nút Run thật. Thêm bước verify: check pixel 10px bên dưới, nếu cũng xanh thì mới là nút solid, không phải viền mỏng.

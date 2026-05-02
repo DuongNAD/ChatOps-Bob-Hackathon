@@ -1,0 +1,1 @@
+Bot gửi tin nhắn Telegram bị lỗi 400 Bad Request "can't parse entities". Nguyên nhân là AI trả về markdown có ký tự đặc biệt _ và * không đúng cặp, Telegram parse_mode Markdown bị lỗi. Cần handle exception khi gửi với Markdown thất bại thì gửi lại không có parse_mode.
