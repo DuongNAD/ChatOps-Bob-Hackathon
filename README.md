@@ -1,53 +1,55 @@
 # ChatOps-Bob Gateway
 
-> **IBM Bob Dev Day Hackathon** — A ChatOps microservice that bridges Telegram with IBM Bob AI via RPA automation.
+> **IBM Bob Dev Day Hackathon** — A ChatOps microservice that bridges Telegram with IBM Bob AI via RPA automation, powered by IBM Watsonx Granite.
 
 ## 🎯 What It Does
 
 Send a `/bob` command from Telegram → the gateway automates VS Code's Bob IDE via RPA (pyautogui) → Bob executes the task → screenshot + code result sent back to Telegram.
 
 ```
-Telegram  →  FastAPI Webhook  →  RPA Controller  →  Bob IDE (VS Code)
-   ↑                                                       ↓
-   └──────────────  Screenshot + Code Result  ←────────────┘
+Telegram  →  FastAPI Webhook  →  Message Router  →  IBM Watsonx AI / Bob RPA
+   ↑                                                        ↓
+   └──────────────  Screenshot + Code Result  ←─────────────┘
 ```
 
 ## 🏗️ Architecture
 
-| Layer | Technology |
-|-------|-----------|
-| **API Framework** | FastAPI (async) |
-| **AI Engine** | IBM Watsonx `ibm/granite-3-8b-instruct` |
-| **Chat Platform** | Telegram Bot (webhook) |
-| **RPA Automation** | pyautogui + pygetwindow + Pillow |
-| **Database** | SQLite (async via aiosqlite) |
-| **MCP Server** | `chatops-gateway` for conversation queries |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **API Gateway** | FastAPI (async) | Webhook handlers, REST API, Dashboard |
+| **AI Engine** | IBM Watsonx `ibm/granite-3-8b-instruct` | Natural language processing |
+| **Chat Platform** | Telegram Bot (webhook) | User interface via mobile/desktop |
+| **RPA Automation** | pyautogui + pixel detection | Automate Bob IDE in VS Code |
+| **Database** | SQLite (async via aiosqlite) | Conversation history & sessions |
+| **MCP Server** | `chatops-gateway` (4 tools) | External AI tool integration |
+| **Dashboard** | HTML/CSS/JS | Real-time monitoring UI |
 
 ## 📁 Project Structure
 
 ```
-IBM_Hackathon/
+ChatOps-Bob-Hackathon/
 ├── app/
 │   ├── api/v1/endpoints/
-│   │   ├── scan.py              # Legacy scan endpoint
-│   │   └── webhook.py           # Telegram webhook handler
+│   │   ├── webhook.py           # Telegram webhook + bot commands
+│   │   └── dashboard.py         # REST API: conversations & stats
 │   ├── core/config.py           # Pydantic settings
-│   ├── models/conversation.py   # SQLite async database layer
-│   ├── schemas/message.py       # Pydantic V2 schemas
+│   ├── models/conversation.py   # Async SQLite database layer
+│   ├── schemas/message.py       # Pydantic V2 message schemas
 │   ├── services/
 │   │   ├── channel_adapters/
 │   │   │   └── telegram.py      # Telegram Bot adapter
-│   │   ├── ibm_ai_client.py     # IBM Watsonx AI client
+│   │   ├── ibm_ai_client.py     # IBM Watsonx AI client (mock + live)
 │   │   ├── message_router.py    # Message routing + /bob handler
 │   │   └── rpa_controller.py    # Bob IDE RPA automation
-│   └── mcp/server.py            # MCP server for conversations
+│   ├── mcp/server.py            # MCP server (4 tools)
+│   ├── static/                  # Dashboard assets (CSS, JS)
+│   └── templates/               # Dashboard HTML
 ├── bob_sessions/                # Bob IDE task histories + screenshots
 ├── data/
 │   ├── chatops.db               # SQLite database (auto-created)
 │   └── screenshots/             # RPA-captured screenshots
-├── tests/
-├── AGENTS.md                    # AI coding rules
-├── main.py                      # App entry point
+├── tests/                       # Pytest test suite
+├── main.py                      # App entry point + dashboard route
 └── requirements.txt
 ```
 
@@ -56,7 +58,7 @@ IBM_Hackathon/
 ### Prerequisites
 - Python 3.13+
 - IBM Bob IDE extension in VS Code
-- Telegram Bot token
+- Telegram Bot token (via [@BotFather](https://t.me/BotFather))
 - IBM Cloud API key (for Watsonx AI)
 - ngrok (for Telegram webhook tunneling)
 
@@ -79,21 +81,38 @@ copy .env.example .env
 # Edit .env with your real API keys
 
 # 5. Start the server
-.\venv\Scripts\python.exe -m uvicorn main:app --reload
+python -m uvicorn main:app --reload
 
-# 6. Expose via ngrok (new terminal)
+# 6. Open dashboard
+# Visit http://localhost:8000/dashboard
+
+# 7. Expose via ngrok (new terminal)
 ngrok http 8000
 
-# 7. Set Telegram webhook
+# 8. Set Telegram webhook
 # POST https://api.telegram.org/bot<TOKEN>/setWebhook?url=<NGROK_URL>/api/v1/webhook/telegram
 ```
 
-### Usage
+### 🤖 Bot Commands
 
-In Telegram, send to your bot:
-- **Chat with AI**: Just type any message → IBM Granite AI responds
-- **Run Bob IDE task**: `/bob Write a Python function to calculate Fibonacci series`
-- **Get weather**: `/bob Write a Python script that fetches Tokyo weather`
+| Command | Description |
+|---------|-------------|
+| `/help` | Show available commands |
+| `/status` | Check system status (AI mode, DB, connections) |
+| `/history` | View your recent conversation history |
+| `/bob <task>` | Send a task to IBM Bob AI in VS Code |
+| *(any text)* | Chat directly with IBM Granite AI |
+
+### 📡 REST API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | System health check |
+| `GET` | `/dashboard` | Web monitoring dashboard |
+| `GET` | `/api/v1/conversations` | Recent conversations |
+| `GET` | `/api/v1/stats` | System statistics |
+| `POST` | `/api/v1/webhook/telegram` | Telegram webhook |
+| `GET` | `/docs` | OpenAPI documentation |
 
 ## 🔑 Environment Variables
 
@@ -101,16 +120,31 @@ In Telegram, send to your bot:
 |----------|-------------|
 | `IBM_CLOUD_API_KEY` | IBM Cloud API key for Watsonx |
 | `WATSONX_PROJECT_ID` | Watsonx project ID |
+| `WATSONX_MODEL` | AI model (default: `ibm/granite-3-8b-instruct`) |
 | `TELEGRAM_BOT_TOKEN` | Telegram Bot API token |
 | `USE_MOCK_AI` | `True` for mock responses, `False` for real AI |
-| `FORCE_ENGLISH_OUTPUT` | Force AI to respond in English |
+| `DATABASE_URL` | SQLite database URL |
 
 ## 🧪 Testing
 
 ```bash
 pytest                              # Run all tests
-pytest --cov=app --cov-report=html  # With coverage
+pytest --cov=app --cov-report=html  # With coverage report
+pytest tests/test_chatops.py -v     # Run specific test file
 ```
+
+## 🔧 MCP Server
+
+The gateway includes an MCP (Model Context Protocol) server with 4 tools:
+
+| Tool | Description |
+|------|-------------|
+| `fetch_recent_conversations` | Get 5 most recent user messages |
+| `search_conversations` | Search messages by keyword |
+| `get_session_stats` | Session counts, message breakdowns |
+| `get_system_health` | Database, screenshots, system status |
+
+Run standalone: `python -m app.mcp.server`
 
 ## 📸 Bob Sessions & Evidence
 
@@ -127,4 +161,4 @@ Team: `DuongAnh` | Plan: Enterprise
 
 ---
 
-*Built with IBM Bob IDE for the IBM Bob Dev Day Hackathon*
+*Built with IBM Bob IDE & IBM Watsonx AI for the IBM Bob Dev Day Hackathon 2026*

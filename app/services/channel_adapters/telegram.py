@@ -165,7 +165,6 @@ class TelegramAdapter:
         except Exception as e:
             logger.error(f"Error sending photo to chat {chat_id}: {e}")
             return False
-            return False
     
     async def _send_single_message(self, chat_id: str, text: str) -> bool:
         """

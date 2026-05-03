@@ -2,11 +2,14 @@
 MCP (Model Context Protocol) Server for ChatOps Gateway.
 
 This module provides an MCP server that exposes tools for querying
-conversation data from the ChatOps database.
+conversation data and system health from the ChatOps database.
 """
 
 import json
-import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+import aiosqlite
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
@@ -35,6 +38,43 @@ async def list_tools() -> list[Tool]:
                 "properties": {},
                 "required": []
             }
+        ),
+        Tool(
+            name="search_conversations",
+            description="Search conversations by keyword",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "Keyword to search for in conversation messages"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Maximum number of results (default: 10)",
+                        "default": 10
+                    }
+                },
+                "required": ["keyword"]
+            }
+        ),
+        Tool(
+            name="get_session_stats",
+            description="Get statistics about conversation sessions (total sessions, messages, active sessions)",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+        Tool(
+            name="get_system_health",
+            description="Check overall system health including database status and configuration",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
         )
     ]
 
@@ -46,89 +86,204 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     
     Args:
         name: The name of the tool to execute
-        arguments: Tool arguments (not used for fetch_recent_conversations)
+        arguments: Tool arguments
         
     Returns:
         list[TextContent]: Tool execution results
     """
-    if name == "fetch_recent_conversations":
-        return await fetch_recent_conversations()
+    handlers = {
+        "fetch_recent_conversations": fetch_recent_conversations,
+        "search_conversations": search_conversations,
+        "get_session_stats": get_session_stats,
+        "get_system_health": get_system_health,
+    }
+    
+    handler = handlers.get(name)
+    if handler:
+        return await handler(arguments)
     else:
         raise ValueError(f"Unknown tool: {name}")
 
 
-async def fetch_recent_conversations() -> list[TextContent]:
+async def fetch_recent_conversations(arguments: dict) -> list[TextContent]:
     """
     Fetch the 5 most recent user messages from the database.
-    
-    Connects to the SQLite database and retrieves recent user messages
-    with their session_id, content, and timestamp.
-    
-    Returns:
-        list[TextContent]: JSON string containing recent conversations
+    Uses async SQLite for non-blocking database access.
     """
     try:
-        # Connect to database
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute("""
+                SELECT session_id, content, timestamp
+                FROM messages
+                WHERE role = 'user'
+                ORDER BY timestamp DESC
+                LIMIT 5
+            """)
+            rows = await cursor.fetchall()
+            
+            conversations = [
+                {
+                    "session_id": row["session_id"],
+                    "content": row["content"],
+                    "timestamp": row["timestamp"]
+                }
+                for row in rows
+            ]
         
-        # Query for 5 most recent user messages
-        cursor.execute("""
-            SELECT session_id, content, timestamp
-            FROM messages
-            WHERE role = 'user'
-            ORDER BY timestamp DESC
-            LIMIT 5
-        """)
+        return [TextContent(type="text", text=json.dumps(conversations, indent=2, ensure_ascii=False))]
         
-        # Fetch results
-        rows = cursor.fetchall()
-        
-        # Convert to list of dictionaries
-        conversations = []
-        for row in rows:
-            conversations.append({
-                "session_id": row["session_id"],
-                "content": row["content"],
-                "timestamp": row["timestamp"]
-            })
-        
-        # Close connection
-        conn.close()
-        
-        # Return as JSON string
-        result_json = json.dumps(conversations, indent=2, ensure_ascii=False)
-        
-        return [
-            TextContent(
-                type="text",
-                text=result_json
-            )
-        ]
-        
-    except sqlite3.Error as e:
-        error_message = f"Database error: {str(e)}"
-        return [
-            TextContent(
-                type="text",
-                text=json.dumps({"error": error_message})
-            )
-        ]
     except Exception as e:
-        error_message = f"Unexpected error: {str(e)}"
-        return [
-            TextContent(
-                type="text",
-                text=json.dumps({"error": error_message})
-            )
-        ]
+        return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+
+
+async def search_conversations(arguments: dict) -> list[TextContent]:
+    """
+    Search conversations by keyword using async SQLite.
+    """
+    keyword = arguments.get("keyword", "")
+    limit = arguments.get("limit", 10)
+    
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute("""
+                SELECT session_id, role, content, timestamp
+                FROM messages
+                WHERE content LIKE ?
+                ORDER BY timestamp DESC
+                LIMIT ?
+            """, (f"%{keyword}%", limit))
+            rows = await cursor.fetchall()
+            
+            results = [
+                {
+                    "session_id": row["session_id"],
+                    "role": row["role"],
+                    "content": row["content"],
+                    "timestamp": row["timestamp"]
+                }
+                for row in rows
+            ]
+        
+        return [TextContent(type="text", text=json.dumps({
+            "keyword": keyword,
+            "results_count": len(results),
+            "results": results
+        }, indent=2, ensure_ascii=False))]
+        
+    except Exception as e:
+        return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+
+
+async def get_session_stats(arguments: dict) -> list[TextContent]:
+    """
+    Get statistics about conversation sessions.
+    """
+    try:
+        async with aiosqlite.connect(DB_PATH) as db:
+            # Total messages
+            cursor = await db.execute("SELECT COUNT(*) FROM messages")
+            total_messages = (await cursor.fetchone())[0]
+            
+            # Total sessions
+            cursor = await db.execute("SELECT COUNT(DISTINCT session_id) FROM messages")
+            total_sessions = (await cursor.fetchone())[0]
+            
+            # Messages by role
+            cursor = await db.execute("""
+                SELECT role, COUNT(*) as count 
+                FROM messages 
+                GROUP BY role
+            """)
+            role_counts = {row[0]: row[1] for row in await cursor.fetchall()}
+            
+            # Most active sessions
+            cursor = await db.execute("""
+                SELECT session_id, COUNT(*) as msg_count, 
+                       MIN(timestamp) as first_msg, MAX(timestamp) as last_msg
+                FROM messages
+                GROUP BY session_id
+                ORDER BY msg_count DESC
+                LIMIT 5
+            """)
+            active_sessions = [
+                {
+                    "session_id": row[0],
+                    "message_count": row[1],
+                    "first_message": row[2],
+                    "last_message": row[3]
+                }
+                for row in await cursor.fetchall()
+            ]
+        
+        stats = {
+            "total_messages": total_messages,
+            "total_sessions": total_sessions,
+            "messages_by_role": role_counts,
+            "most_active_sessions": active_sessions
+        }
+        
+        return [TextContent(type="text", text=json.dumps(stats, indent=2, ensure_ascii=False))]
+        
+    except Exception as e:
+        return [TextContent(type="text", text=json.dumps({"error": str(e)}))]
+
+
+async def get_system_health(arguments: dict) -> list[TextContent]:
+    """
+    Check overall system health.
+    """
+    health = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "components": {}
+    }
+    
+    # Check database
+    try:
+        db_exists = Path(DB_PATH).exists()
+        if db_exists:
+            async with aiosqlite.connect(DB_PATH) as db:
+                cursor = await db.execute("SELECT COUNT(*) FROM messages")
+                count = (await cursor.fetchone())[0]
+                health["components"]["database"] = {
+                    "status": "healthy",
+                    "path": DB_PATH,
+                    "total_records": count
+                }
+        else:
+            health["components"]["database"] = {
+                "status": "not_initialized",
+                "path": DB_PATH
+            }
+    except Exception as e:
+        health["components"]["database"] = {
+            "status": "error",
+            "error": str(e)
+        }
+        health["status"] = "degraded"
+    
+    # Check screenshots directory
+    screenshots_dir = Path("data/screenshots")
+    if screenshots_dir.exists():
+        screenshot_count = len(list(screenshots_dir.glob("*.png")))
+        health["components"]["screenshots"] = {
+            "status": "healthy",
+            "directory": str(screenshots_dir),
+            "file_count": screenshot_count
+        }
+    else:
+        health["components"]["screenshots"] = {
+            "status": "not_initialized"
+        }
+    
+    return [TextContent(type="text", text=json.dumps(health, indent=2, ensure_ascii=False))]
 
 
 async def main():
     """
     Main entry point for the MCP server.
-    
     Runs the server using stdio transport.
     """
     async with stdio_server() as (read_stream, write_stream):
@@ -143,6 +298,5 @@ async def main():
 if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
-
 
 # Made with Bob

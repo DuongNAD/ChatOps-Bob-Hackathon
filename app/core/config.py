@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # Application
-    APP_NAME: str = "Social Media API Gateway"
+    APP_NAME: str = "ChatOps-Bob Gateway"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     

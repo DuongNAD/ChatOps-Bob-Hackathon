@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ChatOps-Bob Gateway Dashboard — Real-time monitoring for IBM Bob AI automation via Telegram">
+    <title>ChatOps-Bob Gateway — Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div>
+                <div class="logo">⚡ ChatOps-Bob</div>
+                <div class="logo-sub">IBM Watsonx AI Gateway</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="status-badge status-mock" id="ai-mode-badge">🧪 Mock AI</span>
+            <span class="status-badge status-healthy" id="status-badge">
+                <span class="pulse-dot" id="pulse-dot"></span> Loading...
+            </span>
+            <button class="btn-refresh" id="btn-refresh" onclick="refreshAll()">🔄 Refresh</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Stats Row -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">💬</div>
+                <div class="stat-value" id="stat-messages">—</div>
+                <div class="stat-label">Total Messages</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="stat-sessions">—</div>
+                <div class="stat-label">Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👤</div>
+                <div class="stat-value" id="stat-user-msgs">—</div>
+                <div class="stat-label">User Messages</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🤖</div>
+                <div class="stat-value" id="stat-ai-msgs">—</div>
+                <div class="stat-label">AI Responses</div>
+            </div>
+        </section>
+
+        <!-- Content Grid -->
+        <section class="content-grid">
+            <!-- Recent Conversations -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">💬 Recent Conversations</h2>
+                </div>
+                <div class="panel-body" id="conversations-list">
+                    <div class="empty-state">
+                        <div class="loading-spinner"></div>
+                        <p style="margin-top:1rem;color:var(--text-muted)">Loading conversations...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div style="display:flex;flex-direction:column;gap:1.25rem">
+                <!-- Architecture -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🏗️ Architecture</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="arch-item">
+                            <div class="arch-icon blue">🌐</div>
+                            <div>
+                                <div class="arch-name">FastAPI Gateway</div>
+                                <div class="arch-detail">Async webhook handlers</div>
+                            </div>
+                        </div>
+                        <div class="arch-item">
+                            <div class="arch-icon green">🧠</div>
+                            <div>
+                                <div class="arch-name">IBM Watsonx AI</div>
+                                <div class="arch-detail" id="model-name">ibm/granite-3-8b-instruct</div>
+                            </div>
+                        </div>
+                        <div class="arch-item">
+                            <div class="arch-icon purple">🤖</div>
+                            <div>
+                                <div class="arch-name">RPA Controller</div>
+                                <div class="arch-detail">pyautogui + pixel detection</div>
+                            </div>
+                        </div>
+                        <div class="arch-item">
+                            <div class="arch-icon amber">📡</div>
+                            <div>
+                                <div class="arch-name">Telegram Bot</div>
+                                <div class="arch-detail">Webhook integration</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pipeline Flow -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">🔄 Message Pipeline</h2>
+                    </div>
+                    <div class="pipeline-flow">
+                        <div class="pipeline-step step-1">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-title">Telegram Webhook</div>
+                                <div class="step-desc">Receive & parse message</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-step step-2">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-title">Message Router</div>
+                                <div class="step-desc">Route to AI or RPA</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-step step-3">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-title">IBM Granite / Bob RPA</div>
+                                <div class="step-desc">Generate response or automate</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-step step-4">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <div class="step-title">Deliver to User</div>
+                                <div class="step-desc">Text + screenshot via Telegram</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        Built with <a href="https://ibm.com/watsonx" target="_blank">IBM Watsonx AI</a> &
+        <a href="https://ibm.com/bob" target="_blank">IBM Bob IDE</a>
+        — IBM Bob Dev Day Hackathon 2026
+    </footer>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
