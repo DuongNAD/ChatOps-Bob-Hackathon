@@ -158,10 +158,10 @@ class TestRPAControllerRunRPA:
         result = controller._run_rpa("test command")
         
         # Verify pyautogui calls
-        mock_pyautogui.hotkey.assert_any_call('alt', 'tab')
-        mock_pyautogui.hotkey.assert_any_call('ctrl', 'shift', 'i')
+        # Note: hotkey('ctrl', 'v') is the only guaranteed hotkey call now
+        # alt+tab is only used as fallback, and ctrl+alt+b is only used if no window is found
         mock_pyautogui.hotkey.assert_any_call('ctrl', 'v')
-        mock_pyautogui.press.assert_called_with('enter')
+        mock_pyautogui.press.assert_any_call('enter')
         
         # Verify clipboard operations
         mock_pyperclip.copy.assert_called_with("test command")
